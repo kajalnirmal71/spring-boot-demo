@@ -1,36 +1,72 @@
 package com.innoxitsolution.spingbootproject.controller;
 
-import com.innoxitsolution.spingbootproject.model.Employee;
-import com.innoxitsolution.spingbootproject.repository.EmployeeRepository;
+
+import com.innoxitsolution.spingbootproject.model.EmployeeInfo;
+import com.innoxitsolution.spingbootproject.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
-    @RestController
-    @RequestMapping("/employee")
-    public class EmployeeController {
+@RestController
+@RequestMapping("/employees")
+public class EmployeeController {
 
-        @Autowired
-       private EmployeeRepository repository;
+    @Autowired
+    private EmployeeService employeeService;
 
-        // Add new employee
-        @PostMapping
-        public Employee addEmployee(@RequestBody Employee employee) {
-            return repository.save(employee);
-        }
-
-        // Get all employees
-        @GetMapping
-        public List<Employee> getAllEmployees() {
-            return repository.findAll();
-        }
-
-        // Get employee by ID
-        @GetMapping("/{id}")
-        public Employee getEmployee(@PathVariable Long id) {
-            return repository.findById(id).orElse(null);
-        }
+    @PostMapping
+    public ResponseEntity<EmployeeInfo> create(@RequestBody EmployeeInfo employee) {
+        return ResponseEntity.ok(employeeService.save(employee));
     }
+    @PostMapping("/addEmployees")
+    public ResponseEntity<String> addEmployees(@RequestBody List<EmployeeInfo> employees) {
+        employeeService.saveAll(employees);
+        return ResponseEntity.ok(employees.size() + " employees added successfully");
+    }
+
+    @GetMapping
+    public ResponseEntity<List<EmployeeInfo>> getAll() {
+        return ResponseEntity.ok(employeeService.getAll());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EmployeeInfo> update(@PathVariable Long id, @RequestBody EmployeeInfo employee) {
+        return ResponseEntity.ok(employeeService.update(id, employee));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<EmployeeInfo> patch(@PathVariable Long id, @RequestBody EmployeeInfo patchData) {
+        Optional<EmployeeInfo> optionalEmployee = employeeService.getById(id);
+
+        if (optionalEmployee.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        EmployeeInfo existing = optionalEmployee.get();
+
+        // Patch logic: only update if non-null
+        if (patchData.getName() != null) {
+            existing.setName(patchData.getName());
+        }
+        if (patchData.getDepartment() != null) {
+            existing.setDepartment(patchData.getDepartment());
+        }
+        if (patchData.getSalary() != null) {
+            existing.setSalary(patchData.getSalary());
+        }
+
+        EmployeeInfo updated = employeeService.save(existing);
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        employeeService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}
 
 
