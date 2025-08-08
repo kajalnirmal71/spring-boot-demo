@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-
 @Service
 public class EmployeeServiceImpl implements EmployeeService {
 
@@ -16,37 +15,68 @@ public class EmployeeServiceImpl implements EmployeeService {
     private EmployeeRepository employeeRepository;
 
     @Override
-    public EmployeeInfo save(EmployeeInfo employee) {
+    public EmployeeInfo createEmployee(EmployeeInfo employee) {
         return employeeRepository.save(employee);
     }
+
     @Override
-    public List<EmployeeInfo> saveAll(List<EmployeeInfo> employees) {
-        return employeeRepository.saveAll(employees);
-    }
-    @Override
-    public List<EmployeeInfo> getAll() {
+    public List<EmployeeInfo> getAllEmployees() {
         return employeeRepository.findAll();
     }
 
     @Override
-    public Optional<EmployeeInfo> getById(Long id) {
+    public Optional<EmployeeInfo> getEmployeeById(String id) {
+        return Optional.empty ();
+    }
+
+    @Override
+    public Optional<EmployeeInfo> updateEmployee(String id, EmployeeInfo updatedEmployee) {
+        return Optional.empty ();
+    }
+
+    @Override
+    public Optional<EmployeeInfo> patchEmployee(String id, EmployeeInfo partialEmployee) {
+        return Optional.empty ();
+    }
+
+    @Override
+    public boolean deleteEmployee(String id) {
+        return false;
+    }
+
+    @Override
+    public Optional<EmployeeInfo> getEmployeeById(long id) { // ✅ Using long
         return employeeRepository.findById(id);
     }
 
     @Override
-    public EmployeeInfo update(Long id, EmployeeInfo updatedEmployee) {
-        EmployeeInfo existing = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Employee not found with id: " + id));
-
-        existing.setName(updatedEmployee.getName());
-        existing.setDepartment(updatedEmployee.getDepartment());
-        existing.setSalary(updatedEmployee.getSalary());
-
-        return employeeRepository.save(existing);
+    public Optional<EmployeeInfo> updateEmployee(long id, EmployeeInfo updatedEmployee) { // ✅ Using long
+        return employeeRepository.findById(id).map(existing -> {
+            existing.setName(updatedEmployee.getName());
+            existing.setEmail(updatedEmployee.getEmail());
+            existing.setDepartment(updatedEmployee.getDepartment());
+            existing.setSalary(updatedEmployee.getSalary());
+            return employeeRepository.save(existing);
+        });
     }
 
     @Override
-    public void delete(Long id) {
-        employeeRepository.deleteById(id);
+    public Optional<EmployeeInfo> patchEmployee(long id, EmployeeInfo patch) { // ✅ Using long
+        return employeeRepository.findById(id).map(existing -> {
+            if (patch.getName() != null) existing.setName(patch.getName());
+            if (patch.getEmail() != null) existing.setEmail(patch.getEmail());
+            if (patch.getDepartment() != null) existing.setDepartment(patch.getDepartment());
+            if (patch.getSalary() != 0) existing.setSalary(patch.getSalary());
+            return employeeRepository.save(existing);
+        });
+    }
+
+    @Override
+    public boolean deleteEmployee(long id) { // ✅ Using long
+        if (employeeRepository.existsById(id)) {
+            employeeRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }

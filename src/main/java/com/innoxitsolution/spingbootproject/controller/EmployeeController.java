@@ -10,63 +10,47 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/employees")
-public class EmployeeController {
+    @RestController
+    @RequestMapping("/api/employees")
+    public class EmployeeController {
 
-    @Autowired
-    private EmployeeService employeeService;
+        @Autowired
+        private EmployeeService employeeService;
 
-    @PostMapping
-    public ResponseEntity<EmployeeInfo> create(@RequestBody EmployeeInfo employee) {
-        return ResponseEntity.ok(employeeService.save(employee));
-    }
-    @PostMapping("/addEmployees")
-    public ResponseEntity<String> addEmployees(@RequestBody List<EmployeeInfo> employees) {
-        employeeService.saveAll(employees);
-        return ResponseEntity.ok(employees.size() + " employees added successfully");
-    }
-
-    @GetMapping
-    public ResponseEntity<List<EmployeeInfo>> getAll() {
-        return ResponseEntity.ok(employeeService.getAll());
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<EmployeeInfo> update(@PathVariable Long id, @RequestBody EmployeeInfo employee) {
-        return ResponseEntity.ok(employeeService.update(id, employee));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<EmployeeInfo> patch(@PathVariable Long id, @RequestBody EmployeeInfo patchData) {
-        Optional<EmployeeInfo> optionalEmployee = employeeService.getById(id);
-
-        if (optionalEmployee.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        @PostMapping
+        public ResponseEntity<EmployeeInfo> createEmployee(@RequestBody EmployeeInfo employee) {
+            EmployeeInfo saved = employeeService.createEmployee(employee);
+            return ResponseEntity.ok(saved);
         }
 
-        EmployeeInfo existing = optionalEmployee.get();
-
-        // Patch logic: only update if non-null
-        if (patchData.getName() != null) {
-            existing.setName(patchData.getName());
-        }
-        if (patchData.getDepartment() != null) {
-            existing.setDepartment(patchData.getDepartment());
-        }
-        if (patchData.getSalary() != null) {
-            existing.setSalary(patchData.getSalary());
+        @GetMapping
+        public ResponseEntity<List<EmployeeInfo>> getAllEmployees() {
+            return ResponseEntity.ok(employeeService.getAllEmployees());
         }
 
-        EmployeeInfo updated = employeeService.save(existing);
-        return ResponseEntity.ok(updated);
+        @GetMapping("/{id}")
+        public ResponseEntity<EmployeeInfo> getEmployeeById(@PathVariable String id) {
+            Optional<EmployeeInfo> emp = employeeService.getEmployeeById(id);
+            return emp.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<EmployeeInfo> updateEmployee(@PathVariable String id, @RequestBody EmployeeInfo updated) {
+            Optional<EmployeeInfo> updatedEmp = employeeService.updateEmployee(id, updated);
+            return updatedEmp.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @PatchMapping("/{id}")
+        public ResponseEntity<EmployeeInfo> patchEmployee(@PathVariable String id, @RequestBody EmployeeInfo partial) {
+            Optional<EmployeeInfo> patched = employeeService.patchEmployee(id, partial);
+            return patched.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteEmployee(@PathVariable String id) {
+            boolean deleted = employeeService.deleteEmployee(id);
+            return deleted ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
+        }
     }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        employeeService.delete(id);
-        return ResponseEntity.noContent().build();
-    }
-}
 
 
